@@ -1,1 +1,11 @@
 <span>Let's do it!</span>
+<select name="vehicle-type" id="vehicle-type">
+    <option value="none">---</option>
+    <option value="moto">Moto</option>
+    <option value="automovil">Automovil</option>
+</select>
+<ul>
+    {% for automovil in motos %}
+        <li>{{ automovil.marca }} {{ automovil.modelo }}</li>
+    {% endfor %}
+</ul>

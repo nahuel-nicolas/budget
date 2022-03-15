@@ -7,12 +7,9 @@ from .models import Automovil, Moto
 #     context = {'latest_question_list': latest_question_list}
 #     return render(request, 'polls/index.html', context)
 
-# def index(request):
-#     context = {
-#         'automoviles': Automovil.objects.all(),
-#         'motos': Moto.objects.all(),
-#     }
-#     return render(request, 'budget_app/index.html', context)
-
 def index(request):
-    return render(request, 'budget_app/index.html')
+    context = {
+        'automoviles': Automovil.objects.all,
+        'motos': Moto.objects.all,
+    }
+    return render(request, 'budget_app/index.html', context)

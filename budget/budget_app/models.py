@@ -1,21 +1,32 @@
+from pyexpat import model
 from django.db import models
+from random import randint, choice
 
-class Respuesto (models.Model):
+class Repuesto (models.Model):
     nombre = models.CharField(max_length=100)
-    precio = models.IntegerField()
+    precio = models.IntegerField(default=0, blank=True)
+    size = models.CharField(
+        max_length=20,
+        choices= [('L', 'Grande'), ('M', 'Mediano'), ('S', 'Pequeño')], 
+        default='M', 
+        blank=True,
+    )
+    importado = models.BooleanField(default=False, blank=True)
 
     def __str__(self):
-        return self.nombre
+        importado = 'importado' if self.importado else 'nacional'
+        return f"{self.nombre} - Tamaño {self.size} - Origen {importado} "
+
+    def save(self, *args, **kwargs):
+        if self.precio == 0:
+            self.precio = randint(21, 2100)
+        super().save(*args, **kwargs)
 
 class Desperfecto(models.Model):
-    nombre = models.CharField(max_length=200, default='nombre')
-    descripcion = models.TextField()
+    descripcion = models.TextField(default='Describe el desperfecto...', blank=True)
     mano_de_obra = models.IntegerField()
-    tiempo = models.TimeField()
-    respuestos = models.ManyToManyField(Respuesto)
-
-    def __str__(self):
-        return self.nombre
+    tiempo_dias = models.IntegerField()
+    repuestos = models.ManyToManyField(Repuesto)
 
 class Vehiculo(models.Model):
     marca = models.CharField(max_length=200)
@@ -27,22 +38,19 @@ class Vehiculo(models.Model):
         abstract = True
 
 class Automovil(Vehiculo):
-    # COMPACTO = 'CM'
-    # SEDAN = "SD"
-    # MONOVOLUMEN = "MV"
-    # UTILITARIO = "UT"
-    # LUJO = "LJ"
-    # AUTOMOVIL_TIPOS = [
-    #     (COMPACTO, 'Compacto'),
-    #     (SEDAN, 'Sedan'),
-    #     (MONOVOLUMEN, 'Monovolumen'),
-    #     (UTILITARIO, 'Utilitario'),
-    #     (LUJO, 'Lujo')
-    # ]
-    tipo = models.CharField(max_length=50)
-    cantidad_puertas = models.IntegerField()
+    AUTOMOVIL_TIPOS = [
+        ('CM', 'Compacto'),
+        ("MV", 'Monovolumen'),
+        ("SD", 'Sedan'),
+        ("UT", 'Utilitario'),
+        ("LJ", 'Lujo')
+    ]
+    tipo = models.CharField(max_length=50, choices=AUTOMOVIL_TIPOS)
+    cantidad_puertas = models.IntegerField(choices=[(2, 2), (4, 4)])
 
 class Moto(Vehiculo):
-    cilindrada = models.CharField(max_length=10)
-
+    cilindrada = models.CharField(
+        max_length=10, 
+        choices=[('S', '125 cc'), ('M', '250 cc'), ('L', '500 cc')],
+    )
 
