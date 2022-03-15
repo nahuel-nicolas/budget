@@ -4,11 +4,18 @@ class Respuesto (models.Model):
     nombre = models.CharField(max_length=100)
     precio = models.IntegerField()
 
+    def __str__(self):
+        return self.nombre
+
 class Desperfecto(models.Model):
+    nombre = models.CharField(max_length=200, default='nombre')
     descripcion = models.TextField()
     mano_de_obra = models.IntegerField()
     tiempo = models.TimeField()
     respuestos = models.ManyToManyField(Respuesto)
+
+    def __str__(self):
+        return self.nombre
 
 class Vehiculo(models.Model):
     marca = models.CharField(max_length=200)
