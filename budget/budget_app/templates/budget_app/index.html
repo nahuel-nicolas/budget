@@ -1,11 +1,69 @@
-<span>Let's do it!</span>
-<select name="vehicle-type" id="vehicle-type">
-    <option value="none">---</option>
-    <option value="moto">Moto</option>
-    <option value="automovil">Automovil</option>
-</select>
-<ul>
-    {% for automovil in motos %}
-        <li>{{ automovil.marca }} {{ automovil.modelo }}</li>
-    {% endfor %}
-</ul>
+{% load static %}
+<link rel="stylesheet" href="{% static 'budget_app/style.css' %}">
+<h1>Let's do it!</h1>
+<form action="{% url 'budget_app:index' %}"" method="get" id="vehicle_form">
+    
+    <select name="vehicle_type" id="id_vehicle_type" required>
+        <option value="none">Select</option>
+        <option value="bike">Moto</option>
+        <option value="car">Automovil</option>
+    </select>
+    <fieldset id="generic_specifications">
+        {% for field in vehiculo.fields %}
+        <div class="field_container">
+            <label for="id_{{ field }}">{{ field.capitalize }}</label>
+            <input type="text" name="{{ field }}" id="id_{{ field }}">
+        </div>
+        {% endfor %}
+    </fieldset>
+    <fieldset id="car_specifications">
+        <div class="field_container">
+            <label for="car_types">Clase de automovil</label>
+            <select name="car_types" id="id_car_types">
+                <option value="CM">Compacto</option>
+                <option value="MV">Monovolumen</option>
+                <option value="SD">Sedan</option>
+                <option value="UT">Utilitario</option>
+                <option value="LJ">Lujo</option>
+            </select>
+        </div>
+        <div class="field_container">
+            <label for="car_doors">Cantidad de puertas</label>
+            <select name="car_doors_number" id="id_car_doors">
+                <option value="2">2</option>
+                <option value="4">4</option>
+            </select>
+        </div>
+    </fieldset>
+    <fieldset id="bike_specifications">
+        <select name="engine_size" id="id_bike_engine_size">
+            <option value="S">125 cc</option>
+            <option value="M">250 cc</option>
+            <option value="L">500 cc</option>
+        </select>
+    </fieldset>
+    <fieldset id="failure_fieldset">
+        <div id="main_failure_container" class="container">
+            <!-- {% for field in desperfecto.fields %}
+                {% if field != "id" %}
+                    <div class="field_container">
+                        <label for="id_{{ field }}">{{ field.capitalize }}</label>
+                        <input type="text" name="{{ field }}" id="id_{{ field }}">
+                    </div>
+                {% endif %}
+            {% endfor %} -->
+            <select name="" id="" multiple>
+                <option value=""></option>
+            </select>
+        </div>
+        <div id="pusher_button">+</div>
+    </fieldset>
+    <input type="submit" value="Continue" name="continue">
+</form>
+<script>
+    const replacement_objects_json = {{ repuesto.model_json | safe }};
+    const failure_fields = {{ desperfecto.fields | safe }};
+</script>
+<script src="{% static 'budget_app/app.js' %}"></script>
+
+
