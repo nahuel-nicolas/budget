@@ -1,7 +1,4 @@
-// console.log('app.js is loading')
-console.log(replacement_objects_json)
-// console.log(failure_fields)
-
+// replacement_objects_json
 // [
 //     {
 //         "model": "budget_app.replacement",
@@ -17,39 +14,239 @@ console.log(replacement_objects_json)
 // ]
 
 const form = document.getElementById("vehicle_form");
+const enumerator = document.getElementById("enumerator");
+const failures_section = enumerator.querySelector("#failures")
 const failure_fieldset = form.querySelector("#failure_fieldset");
 const main_failure_container = failure_fieldset.querySelector("#main_failure_container");
 let last_failure_container_id = -1;
 const replacementOptionsPointers = []
-const dynamic_vehicle_data = {
+const vehicle_dynamic_data = {
+    "marca": null,
+    "modelo": null,
+    "patente": null,
     "vehicle_type": null,
     "car_types": null,
     "car_doors": null,
     "bike_engine_size": null,
 }
+// const relevant_replacement_dynamic_data = {
+//     "vehicle_type": null,
+//     "car_types": null,
+//     "car_doors": null,
+//     "bike_engine_size": null,
+// }
 
-function getDynamicWebSelects() {
-    const dynamicWebSelects = {}
-    for (const currentDymanicVehicleDataName in dynamic_vehicle_data) {
-        dynamicWebSelects[currentDymanicVehicleDataName] = form.
-        querySelector(`#id_${currentDymanicVehicleDataName}`);
+function getDynamicWebInputs(vehicle_dynamic_data, failureContainerParent_id=null) {
+    const dynamicWebInputs = {}
+    if (failureContainerParent_id==null) {
+        for (const currentDymanicVehicleDataName in vehicle_dynamic_data) {
+            dynamicWebInputs[currentDymanicVehicleDataName] = form.
+            querySelector(`#id_${currentDymanicVehicleDataName}`);
+        }
+    } else {
+        for (const currentDymanicVehicleDataName in vehicle_dynamic_data) {
+            dynamicWebInputs[currentDymanicVehicleDataName] = form.
+            querySelector(`#id_${failureContainerParent_id}_${currentDymanicVehicleDataName}`);
+        }
     }
-    return dynamicWebSelects;
+    
+    return dynamicWebInputs;
 }
 
-const dynamicWebSelects = getDynamicWebSelects();
+const dynamicWebInputs = getDynamicWebInputs(vehicle_dynamic_data, null);
 
-function addEventsToDynamicWebSelects() {
-    for (const currentDynamicWebSelectName in dynamicWebSelects) {
-        const currentDynamicWebSelect = dynamicWebSelects[currentDynamicWebSelectName];
-        currentDynamicWebSelect.addEventListener('change', (event) => {
-            dynamic_vehicle_data[currentDynamicWebSelectName] = event.target.value;
-            console.log(dynamic_vehicle_data);
+const generic_specifications = form.querySelector("#generic_specifications");
+const car_specifications = form.querySelector("#car_specifications");
+const bike_specifications = form.querySelector("#bike_specifications");
+const submit_button = form.querySelector("#submit_button")
+const fieldsets = [
+    generic_specifications, car_specifications, bike_specifications, failure_fieldset, submit_button
+];
+
+for (const fieldSet of fieldsets) {
+    fieldSet.disabled=true;
+}
+
+let optionsSet;
+
+function checkForChangesHelper(parentParameters) {
+    let shallDisableFailureField = false;
+    optionsSet = new Set([null, ""]);
+    for (const fieldName of parentParameters) {
+        if (optionsSet.has(vehicle_dynamic_data[fieldName])) {
+            shallDisableFailureField = true;
+            break;
+        }
+    }
+    failure_fieldset.disabled = shallDisableFailureField;
+    submit_button.disabled = shallDisableFailureField;
+    if (!(shallDisableFailureField)) {
+        optionsSet = new Set([null, '']);
+        let shallDisableSubmitButton = false;
+        for (let idx=0; idx<failure_dynamic_data.length; idx++) {
+            for (const fieldName in failure_dynamic_data[idx]) {
+                const currentFieldValue = failure_dynamic_data[idx][fieldName];
+                if (fieldName == 'replacements') {
+                    if (currentFieldValue.length == 0) {
+                        shallDisableSubmitButton = true;
+                        break;
+                    }
+                } else if (optionsSet.has(currentFieldValue)) {
+                    shallDisableSubmitButton = true;
+                    break;
+                }
+            }
+            submit_button.disabled = shallDisableSubmitButton;
+        }
+    }
+}
+
+function checkForChanges() {
+    optionsSet = new Set(['none', null]);
+    if (optionsSet.has(vehicle_dynamic_data['vehicle_type'])) {
+        for (const fieldSet of fieldsets) {
+            fieldSet.disabled=true;
+        }
+    } else if (vehicle_dynamic_data['vehicle_type'] == 'bike') {
+        generic_specifications.disabled = false;
+        car_specifications.disabled = true;
+        bike_specifications.disabled = false;
+        checkForChangesHelper(["marca", "modelo", "patente", "bike_engine_size"]);
+    } else if (vehicle_dynamic_data['vehicle_type'] == 'car') {
+        generic_specifications.disabled = false;
+        bike_specifications.disabled = true;
+        car_specifications.disabled = false;
+        checkForChangesHelper(["marca", "modelo", "patente", "car_types", "car_doors"]);
+    }
+}
+
+function addEventsToDynamicWebInputs() {
+    for (const currentDynamicWebInputName in dynamicWebInputs) {
+        const currentDynamicWebInput = dynamicWebInputs[currentDynamicWebInputName];
+        currentDynamicWebInput.addEventListener('change', (event) => {
+            vehicle_dynamic_data[currentDynamicWebInputName] = event.target.value;
+            checkForChanges();
+            console.log(vehicle_dynamic_data);
         });
     }
 }
 
-addEventsToDynamicWebSelects()
+addEventsToDynamicWebInputs()
+
+function getFailureFieldNames() {
+    const failureFieldNames = ['descripcion', 'mano_de_obra', 'tiempo_dias', 'replacements'];
+    return failureFieldNames;
+}
+const failureFieldNames = getFailureFieldNames()
+
+const failure_dynamic_data = [];
+
+function appendIndexToFailureDynamicData() {
+    for (let i=failure_dynamic_data.length; i<=last_failure_container_id; i++) {
+        failure_dynamic_data[i] = {};
+        for (const fieldName of failureFieldNames) {
+            if (fieldName == 'replacements') {
+                failure_dynamic_data[i][fieldName] = [];
+            } else {
+                failure_dynamic_data[i][fieldName] = null;
+            }
+        }
+    }
+    return failure_dynamic_data;
+}
+
+function getFailureWebInputsList() {
+    const failureWebInputsList = [];
+    for (let i=0; i<failure_dynamic_data.length; i++) {
+        failureWebInputsList[i] = getDynamicWebInputs(
+            failure_dynamic_data[i], i
+        );
+    }
+    return failureWebInputsList;
+}
+
+const totalParkingCostElement = enumerator.querySelector("#total_parking_cost");
+const totalWorkingCostElement = enumerator.querySelector("#total_working_cost");
+const totalReplacementsCostElement = enumerator.querySelector("#total_replacements_cost");
+const totalBaseElement = enumerator.querySelector("#total_base");
+const totalElement = enumerator.querySelector("#total");
+
+function updateTotalBudget() {
+    optionsSet = new Set([null, "", "0", " "]);
+    let totalFailureParkingDays = 0;
+    let totalWorkingCost = 0;
+    let totalReplacementCost = 0;
+    for (let i=0; i<failureSectionDataPointers.length; i++) {
+        for (const currentField of ["tiempo_dias", "replacements", "mano_de_obra"]) {
+            if (optionsSet.has(failureSectionDataPointers[i][currentField].textContent)) {
+                return;
+            }
+        } 
+        const currentFailureParkingDays = parseInt(
+            failureSectionDataPointers[i]["tiempo_dias"].textContent
+        );
+        const currentWorkingCost = parseInt(
+            failureSectionDataPointers[i]["mano_de_obra"].textContent
+        );
+        const currentReplacementsCost = parseInt(
+            failureSectionDataPointers[i]["replacements"].textContent
+        );
+        totalFailureParkingDays += currentFailureParkingDays;
+        totalWorkingCost += currentWorkingCost;
+        totalReplacementCost += currentReplacementsCost;
+    }
+    const totalParkingCost = totalFailureParkingDays * 130;
+    totalParkingCostElement.textContent = totalParkingCost.toString();
+    totalWorkingCostElement.textContent = totalWorkingCost.toString();
+    totalReplacementsCostElement.textContent = totalReplacementCost.toString();
+    const totalBaseCost = totalParkingCost + totalWorkingCost + totalReplacementCost;
+    totalBaseElement.textContent = totalBaseCost.toString();
+    const totalCost = totalBaseCost + totalBaseCost * 0.1
+    totalElement.textContent = totalCost.toString();
+}
+
+let failureWebInputsList = getFailureWebInputsList();
+function addEventsToFailureWebInputsList() {
+    for (let i=0; i<failureWebInputsList.length; i++) {
+        const currentFailureWebInputs = failureWebInputsList[i];
+        for (const failureFieldName in currentFailureWebInputs) {
+            const currentWebInput = currentFailureWebInputs[failureFieldName];
+            currentWebInput.addEventListener('change', (event) => {
+                if (failureFieldName == 'replacements') {
+                    const currentSelectOptions = event.target.options;
+                    const currentSelectedOptionsValue = []
+                    for (const currentOption of currentSelectOptions) {
+                        if (currentOption.selected) {
+                            currentSelectedOptionsValue.push(currentOption.value);
+                        }
+                    }
+                    failure_dynamic_data[i][failureFieldName] = currentSelectedOptionsValue;
+                    let currentFailureReplacementsAmountToPay = 0;
+                    const selected_replacements_pk = new Set(currentSelectedOptionsValue.map(value => parseInt(value)));
+                    for (const currentReplacement of replacement_objects_json) {
+                        if (selected_replacements_pk.has(currentReplacement.pk)) {
+                            currentFailureReplacementsAmountToPay += currentReplacement.fields.precio;
+                        }
+                    }
+                    failureSectionDataPointers[i][failureFieldName].textContent = currentFailureReplacementsAmountToPay.toString(); 
+                } else {
+                    failure_dynamic_data[i][failureFieldName] = event.target.value;
+                    failureSectionDataPointers[i][failureFieldName].textContent = event.target.value;
+                    
+                }
+                console.log(failure_dynamic_data);
+                updateTotalBudget();
+                checkForChanges();
+            });
+        }
+    }
+}
+
+function updateFailureDynamicDataAndInputs() {
+    appendIndexToFailureDynamicData();
+    failureWebInputsList = getFailureWebInputsList();
+    addEventsToFailureWebInputsList();
+}
 
 function capitalizeFirstLetter(string) {
     return string.charAt(0).toUpperCase() + string.slice(1);
@@ -84,6 +281,9 @@ function getCustomWebElement(
     return customWebElement;
 }
 
+const hiddenInput = form.querySelector("#id_failure_counter");
+hiddenInput.style.display = 'none';
+
 function isCurrentReplacementObjectValid(currentReplacementObject, importedStatus, size) {
     return currentReplacementObject.fields.importado == importedStatus && currentReplacementObject.fields.size == size;
 }
@@ -108,26 +308,116 @@ function getReplacementCategories() {
 
 const replacementCategories = getReplacementCategories();
 
+function getBikeEngineSize(bikeEngineSizeString) {
+    return parseInt(bikeEngineSizeString.split(' ')[0]);
+}
+
+function getAvailableReplacementsData() {
+    let availableReplacementImportedStatus, availableReplacementSize;
+    if (vehicle_dynamic_data["vehicle_type"] == "bike") {
+        availableReplacementImportedStatus = false;
+        const bikeEngineSize = getBikeEngineSize(vehicle_dynamic_data["vehicle_type"]);
+        if (bikeEngineSize !== null) {
+            if (bikeEngineSize < 200) {
+                availableReplacementSize = "S";
+            } else if (bikeEngineSize > 400) {
+                availableReplacementSize = "L";
+            } else {
+                availableReplacementSize = "M";
+            }
+        }
+    } else if (vehicle_dynamic_data["vehicle_type"] == "car") {
+        const carType = vehicle_dynamic_data["car_types"];
+        if (carType !== null) {
+            availableReplacementImportedStatus = carType == "LJ" ? true : false;
+            const smallCarTypes = new Set(["CM", "MV"]);
+            const mediumCarTypes = new Set(["SD", "LJ"]);
+            if (smallCarTypes.has(carType)) {
+                availableReplacementSize = "S";
+            } else if (mediumCarTypes.has(carType)) {
+                availableReplacementSize = "M";
+            } else if (carType == 'UT') {
+                availableReplacementSize = "L";
+            }
+        }
+    }
+    return [availableReplacementImportedStatus, availableReplacementSize];
+}
+
 function getAvailableReplacements() {
     const { 
         availableReplacementImportedStatus, availableReplacementSize
     } = getAvailableReplacementsData();
+    if (availableReplacementImportedStatus == null || availableReplacementSize == null) {
+        return replacement_objects_json;
+    }
     const availableReplacements = replacementCategories[`${availableReplacementImportedStatus}_${availableReplacementSize}`];
     return availableReplacements;
 }
 function getReplacementOptions() {
     const availableRemplacements = getAvailableReplacements()
+    const replacementOptions = [];
+    for (const currentReplacementData of availableRemplacements) {
+        const replacementTitle = getCustomWebElement(
+            webElementType="span",
+            attributes={
+                "class": "replacement_title",
+            },
+            children=[],
+            text=currentReplacementData.fields.nombre,
+        );
+        const replacementImportedSpan = getCustomWebElement(
+            webElementType="span",
+            attributes={
+                "class": "imported_span",
+            },
+            children=[],
+            text=currentReplacementData.fields.importado === true ? "I" : "N",
+        );
+        const replacementSizeSpan = getCustomWebElement(
+            webElementType="span",
+            attributes={
+                "class": "size_span",
+            },
+            children=[],
+            text=currentReplacementData.fields.size,
+        );
+        const replacementInfoContainer = getCustomWebElement(
+            webElementType="div",
+            attributes={
+                "class": "info_container",
+            },
+            children=[replacementImportedSpan, replacementSizeSpan],
+        );
+        const currentReplacementOption = getCustomWebElement(
+            webElementType="option",
+            attributes={
+                "class": "replacement_option",
+                "value": currentReplacementData.pk,
+            },
+            children=[replacementTitle, replacementInfoContainer]
+        );
+        replacementOptions.push(currentReplacementOption);
+    }
+    return replacementOptions;
 }
 
 function getReplacementsFieldContainer(parentId) {
-    const replacement_options = getReplacementOptions();
+    const field_id = `id_${parentId}_replacements`
+    const replacements_label = getCustomWebElement(
+        webElementType="label",
+        attributes={
+            "for": field_id,
+        },
+        children=[],
+    );
     const replacements_select = getCustomWebElement(
         webElementType="select",
         attributes={
-            "name": "field_container",
-            "id": "",
+            "name": `${parentId}_field_container`,
+            "id": field_id,
         },
-        children=[],
+        children=getReplacementOptions(),
     );
     replacements_select.multiple = true
     const field_container = getCustomWebElement(
@@ -135,23 +425,38 @@ function getReplacementsFieldContainer(parentId) {
         attributes={
             "class": "field_container"
         },
-        children=[],
+        children=[replacements_label, replacements_select],
     );
+    return field_container;
 }
 
 function getFailureFieldContainers(parentId, failure_fields) {
     const failure_field_containers = [];
     for (const fieldName of failure_fields) {
         if (fieldName != 'id') {
-            const field_id = `id__${parentId}_${fieldName}`
-            const input = getCustomWebElement(
-                webElementType="input",
-                attributes={
-                    "type": "text",
-                    "name": fieldName,
-                    "id": field_id,
-                },
-            );
+            const field_id = `id_${parentId}_${fieldName}`
+            let input;
+            if (fieldName == 'descripcion') {
+                input = getCustomWebElement(
+                    webElementType="input",
+                    attributes={
+                        "type": "text",
+                        // "name": `${parentId}_${fieldName}`,
+                        "name": fieldName,
+                        "id": field_id,
+                    },
+                );
+            } else {
+                input = getCustomWebElement(
+                    webElementType="input",
+                    attributes={
+                        "type": "number",
+                        "name": `${parentId}_${fieldName}`,
+                        "id": field_id,
+                    },
+                );
+            }
+            
             const label = getCustomWebElement(
                 webElementType="label",
                 attributes={
@@ -171,7 +476,7 @@ function getFailureFieldContainers(parentId, failure_fields) {
         }
     }
     const replacements_field_container = getReplacementsFieldContainer(parentId);
-    // failure_field_containers.push(replacements_field_container);
+    failure_field_containers.push(replacements_field_container);
     return failure_field_containers;
 }
 
@@ -189,25 +494,74 @@ function getFailureContainer(id="", failure_fields) {
     return failureContainer
 }
 
-function addFailureContainer(last_failure_container_id, main_failure_container, failure_fields) 
-{
-    last_failure_container_id++;
-    const currentFailureContainer = getFailureContainer(
-        id=toString(last_failure_container_id), failure_fields
+const failureSectionDataPointers = [];
+
+function addFailureSectionToEnumerator(parentId) {
+    const failureSectionId = `id_fs_${parentId}`
+    const failureDescription = getCustomWebElement(
+        'span',
+        {
+            'id': `${failureSectionId}_descripcion`
+        }
     );
-    main_failure_container.appendChild(currentFailureContainer);
+    const workersCost = getCustomWebElement(
+        'span',
+        {
+            'id': `${failureSectionId}_mano_de_obra`
+        }
+    );
+    const tiempoDias = getCustomWebElement(
+        'span',
+        {
+            'id': `${failureSectionId}_tiempo_dias`
+        }
+    );
+    const replacementsCost = getCustomWebElement(
+        'span',
+        {
+            'id': `${failureSectionId}_replacements`
+        }
+    );
+    const failureSectionContainer = getCustomWebElement(
+        'div',
+        {
+            'id': `${failureSectionId}_container`,
+            'class': 'container'
+        },
+        [failureDescription, workersCost, tiempoDias, replacementsCost]
+    );
+    failureSectionDataPointers[parentId] = {
+        'descripcion': failureDescription,
+        'mano_de_obra': workersCost,
+        'tiempo_dias': tiempoDias,
+        'replacements': replacementsCost,
+    }
+    failures_section.appendChild(failureSectionContainer);
 }
 
-function addFailureContainerPusherButton(
-    last_failure_container_id, main_failure_container, failure_fields, failure_fieldset, 
-) {
+function addFailureContainer() 
+{
+    last_failure_container_id++;
+    const parentId = last_failure_container_id.toString();
+    const currentFailureContainer = getFailureContainer(
+        id=parentId, failure_fields
+    );
+    main_failure_container.appendChild(currentFailureContainer);
+    addFailureSectionToEnumerator(parentId);
+    updateFailureDynamicDataAndInputs();
+    checkForChanges();
+    let hiddenInputNewValue = last_failure_container_id + 1;
+    hiddenInputNewValue = hiddenInputNewValue.toString()
+    hiddenInput.setAttribute('value', hiddenInputNewValue);
+    hiddenInput.textContent = hiddenInputNewValue
+}
+
+function addFailureContainerPusherButton() {
     const failureContainerPusherButton = failure_fieldset.querySelector("#pusher_button")
     failureContainerPusherButton.addEventListener('click', () => {
-        addFailureContainer(last_failure_container_id, main_failure_container, failure_fields);
+        addFailureContainer();
     });
 }
 
-addFailureContainer(last_failure_container_id, main_failure_container, failure_fields);
-addFailureContainerPusherButton(
-    last_failure_container_id, main_failure_container, failure_fields, failure_fieldset
-);
+addFailureContainer();
+addFailureContainerPusherButton();
