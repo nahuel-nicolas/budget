@@ -29,12 +29,6 @@ const vehicle_dynamic_data = {
     "car_doors": null,
     "bike_engine_size": null,
 }
-// const relevant_replacement_dynamic_data = {
-//     "vehicle_type": null,
-//     "car_types": null,
-//     "car_doors": null,
-//     "bike_engine_size": null,
-// }
 
 function getDynamicWebInputs(vehicle_dynamic_data, failureContainerParent_id=null) {
     const dynamicWebInputs = {}
@@ -58,9 +52,11 @@ const dynamicWebInputs = getDynamicWebInputs(vehicle_dynamic_data, null);
 const generic_specifications = form.querySelector("#generic_specifications");
 const car_specifications = form.querySelector("#car_specifications");
 const bike_specifications = form.querySelector("#bike_specifications");
+const failureContainerPusherButton = failure_fieldset.querySelector("#pusher_button")
 const submit_button = form.querySelector("#submit_button")
 const fieldsets = [
-    generic_specifications, car_specifications, bike_specifications, failure_fieldset, submit_button
+    generic_specifications, car_specifications, bike_specifications, failure_fieldset, 
+    submit_button
 ];
 
 for (const fieldSet of fieldsets) {
@@ -126,7 +122,12 @@ function addEventsToDynamicWebInputs() {
         currentDynamicWebInput.addEventListener('change', (event) => {
             vehicle_dynamic_data[currentDynamicWebInputName] = event.target.value;
             checkForChanges();
-            console.log(vehicle_dynamic_data);
+            const replacementOptionsRelatedInputs = new Set(
+                ["bike_engine_size", "car_types"]
+            );
+            if (replacementOptionsRelatedInputs.has(currentDynamicWebInputName)) {
+                updateReplacementOptions();
+            }
         });
     }
 }
@@ -234,7 +235,6 @@ function addEventsToFailureWebInputsList() {
                     failureSectionDataPointers[i][failureFieldName].textContent = event.target.value;
                     
                 }
-                console.log(failure_dynamic_data);
                 updateTotalBudget();
                 checkForChanges();
             });
@@ -316,16 +316,7 @@ function getAvailableReplacementsData() {
     let availableReplacementImportedStatus, availableReplacementSize;
     if (vehicle_dynamic_data["vehicle_type"] == "bike") {
         availableReplacementImportedStatus = false;
-        const bikeEngineSize = getBikeEngineSize(vehicle_dynamic_data["vehicle_type"]);
-        if (bikeEngineSize !== null) {
-            if (bikeEngineSize < 200) {
-                availableReplacementSize = "S";
-            } else if (bikeEngineSize > 400) {
-                availableReplacementSize = "L";
-            } else {
-                availableReplacementSize = "M";
-            }
-        }
+        availableReplacementSize = vehicle_dynamic_data["bike_engine_size"];
     } else if (vehicle_dynamic_data["vehicle_type"] == "car") {
         const carType = vehicle_dynamic_data["car_types"];
         if (carType !== null) {
@@ -345,19 +336,22 @@ function getAvailableReplacementsData() {
 }
 
 function getAvailableReplacements() {
-    const { 
-        availableReplacementImportedStatus, availableReplacementSize
-    } = getAvailableReplacementsData();
+    const availableReplacementsData = getAvailableReplacementsData();
+    let availableReplacementImportedStatus = availableReplacementsData[0];
+    let availableReplacementSize = availableReplacementsData[1];
     if (availableReplacementImportedStatus == null || availableReplacementSize == null) {
         return replacement_objects_json;
     }
-    const availableReplacements = replacementCategories[`${availableReplacementImportedStatus}_${availableReplacementSize}`];
+    const importedStatus = availableReplacementImportedStatus == true ? 'importado' : 'nacional';
+    const availableReplacements = replacementCategories[
+        `${importedStatus}_${availableReplacementSize}`
+    ];
     return availableReplacements;
 }
 function getReplacementOptions() {
-    const availableRemplacements = getAvailableReplacements()
+    const availableReplacements = getAvailableReplacements();
     const replacementOptions = [];
-    for (const currentReplacementData of availableRemplacements) {
+    for (const currentReplacementData of availableReplacements) {
         const replacementTitle = getCustomWebElement(
             webElementType="span",
             attributes={
@@ -372,7 +366,7 @@ function getReplacementOptions() {
                 "class": "imported_span",
             },
             children=[],
-            text=currentReplacementData.fields.importado === true ? "I" : "N",
+            text=currentReplacementData.fields.importado === true ? " - Origen importado" : " - Origen nacional",
         );
         const replacementSizeSpan = getCustomWebElement(
             webElementType="span",
@@ -380,7 +374,7 @@ function getReplacementOptions() {
                 "class": "size_span",
             },
             children=[],
-            text=currentReplacementData.fields.size,
+            text=` - Tamaño ${currentReplacementData.fields.size}`,
         );
         const replacementInfoContainer = getCustomWebElement(
             webElementType="div",
@@ -401,7 +395,7 @@ function getReplacementOptions() {
     }
     return replacementOptions;
 }
-
+const replacementSelectList = []
 function getReplacementsFieldContainer(parentId) {
     const field_id = `id_${parentId}_replacements`
     const replacements_label = getCustomWebElement(
@@ -410,16 +404,20 @@ function getReplacementsFieldContainer(parentId) {
             "for": field_id,
         },
         children=[],
+        text="Repuestos"
     );
     const replacements_select = getCustomWebElement(
         webElementType="select",
         attributes={
+            "class": "replacements_select",
             "name": `${parentId}_field_container`,
             "id": field_id,
         },
         children=getReplacementOptions(),
     );
     replacements_select.multiple = true
+    replacementSelectList.push(replacements_select);
+    
     const field_container = getCustomWebElement(
         webElementType="div",
         attributes={
@@ -431,7 +429,13 @@ function getReplacementsFieldContainer(parentId) {
 }
 
 function getFailureFieldContainers(parentId, failure_fields) {
-    const failure_field_containers = [];
+    const field_container_title = getCustomWebElement(
+        'h4',
+        {},
+        [],
+        `Desperfecto ${(parseInt(parentId) + 1).toString()}`
+    );
+    const failure_field_containers = [field_container_title];
     for (const fieldName of failure_fields) {
         if (fieldName != 'id') {
             const field_id = `id_${parentId}_${fieldName}`
@@ -463,7 +467,7 @@ function getFailureFieldContainers(parentId, failure_fields) {
                     "for": field_id,
                 },
                 children=[],
-                text=capitalizeFirstLetter(fieldName),
+                text=`${capitalizeFirstLetter(fieldName.replace(/_/g, " "))} `,
             );
             const field_container = getCustomWebElement(
                 webElementType="div",
@@ -498,11 +502,23 @@ const failureSectionDataPointers = [];
 
 function addFailureSectionToEnumerator(parentId) {
     const failureSectionId = `id_fs_${parentId}`
+    const sectionTitle = getCustomWebElement(
+        'h4',
+        {},
+        [],
+        `Desperfecto ${(parseInt(parentId) + 1).toString()}`
+    );
     const failureDescription = getCustomWebElement(
         'span',
         {
             'id': `${failureSectionId}_descripcion`
         }
+    );
+    const workersCostTitle = getCustomWebElement(
+        'span',
+        {},
+        [],
+        "Costo mano de obra:"
     );
     const workersCost = getCustomWebElement(
         'span',
@@ -510,11 +526,23 @@ function addFailureSectionToEnumerator(parentId) {
             'id': `${failureSectionId}_mano_de_obra`
         }
     );
+    const parkingCostTitle = getCustomWebElement(
+        'span',
+        {},
+        [],
+        "Costo por estacionamiento (día*130):"
+    );
     const tiempoDias = getCustomWebElement(
         'span',
         {
             'id': `${failureSectionId}_tiempo_dias`
         }
+    );
+    const replacementsCostTitle = getCustomWebElement(
+        'span',
+        {},
+        [],
+        "Costo de los repuestos:"
     );
     const replacementsCost = getCustomWebElement(
         'span',
@@ -528,7 +556,10 @@ function addFailureSectionToEnumerator(parentId) {
             'id': `${failureSectionId}_container`,
             'class': 'container'
         },
-        [failureDescription, workersCost, tiempoDias, replacementsCost]
+        [
+            sectionTitle, failureDescription, workersCostTitle, workersCost, 
+            parkingCostTitle, tiempoDias, replacementsCostTitle, replacementsCost
+        ]
     );
     failureSectionDataPointers[parentId] = {
         'descripcion': failureDescription,
@@ -557,10 +588,16 @@ function addFailureContainer()
 }
 
 function addFailureContainerPusherButton() {
-    const failureContainerPusherButton = failure_fieldset.querySelector("#pusher_button")
     failureContainerPusherButton.addEventListener('click', () => {
         addFailureContainer();
     });
+}
+
+function updateReplacementOptions() {
+    for (const currentReplacementSelect of replacementSelectList) {
+        const newOptions = getReplacementOptions();
+        currentReplacementSelect.replaceChildren(...newOptions);
+    }
 }
 
 addFailureContainer();

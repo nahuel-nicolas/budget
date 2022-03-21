@@ -1,27 +1,84 @@
-body {
-    display: flex;
-    flex-direction: row;
-    justify-content: center;
-    align-items: flex-start;
+*, *:focus, *:hover {
+  outline: none;
+  font-weight: normal;
 }
 
-#enumerator {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-#enumerator #failures {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
+h4, h3, h2 {
+  margin: 3px;
+  font-family: "Segoe UI", "Open Sans", "Helvetica Neue", sans-serif;
+  font-weight: 500;
 }
 
-#enumerator #failures .container {
+input, select {
+  margin: 1px 7px;
+}
+
+span, label, h4 {
+  font-family: "Segoe UI", "Open Sans", "Helvetica Neue", sans-serif;
+  font-size: medium;
+}
+
+#pusher_button {
+  cursor: pointer;
+  border: 1px solid grey;
+  border-radius: 7px;
+  width: 20px;
+  text-align: center;
+}
+
+#main_container {
+  display: flex;
+  flex-direction: row;
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+}
+#main_container #form_container #vehicle_form {
+  margin: 14px;
+  width: 400px;
+}
+#main_container #form_container #vehicle_form fieldset .field_container {
+  display: flex;
+  justify-content: space-between;
+}
+#main_container #enumerator {
+  margin: 14px;
+  width: 270px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+#main_container #enumerator #failures {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+#main_container #enumerator #failures .container {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+@media screen and (max-width: 700px) {
+  body #main_container {
+    flex-direction: column;
+    align-items: center;
+  }
+  body #main_container #form_container {
+    margin-top: 50px;
+  }
+  body #main_container #form_container #vehicle_form {
     display: flex;
     flex-direction: column;
-    justify-content: center;
-    align-items: center;
+    width: 350px;
+    margin: 0;
+  }
 }
+
+/*# sourceMappingURL=style.css.map */

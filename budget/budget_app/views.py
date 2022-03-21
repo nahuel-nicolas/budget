@@ -10,22 +10,19 @@ from django.urls import reverse
 #     context = {'latest_question_list': latest_question_list}
 #     return render(request, 'polls/index.html', context)
 
-# modelList = [Automovil, Moto, Desperfecto, Repuesto, Vehiculo]
-"""
-Pass dict of fields. 
-With dict of fields make an object with all the dynamic data inputs. 
-Add event to dynamic data inputs. 
-Separate general dynamic data, relevant replacement dynamic data, failure dynamic data
-Create box enumerator
-Active post button
-Call jose
-Css
-"""
+modelList = [Automovil, Moto, Desperfecto, Repuesto, Vehiculo]
+
 def getModelFields(model):
     return [field.name for field in model._meta.fields]
 
+def getAllModelFields():
+    allModelFields = {}
+    for currentModel in modelList:
+        currentModelName = currentModel.__name__.lower()
+        allModelFields[currentModelName] = getModelFields(currentModel)
+    return allModelFields
+
 def getModelData(model, isAbstract=False):
-    # modelName = model.__name__.lower()
     value = {
         "fields": getModelFields(model),
     }
@@ -66,7 +63,6 @@ def saveBudget(request):
 
     failuresAmount = int(request.POST.get('failure_counter'))
     for currentFailureIdx in range(failuresAmount):
-        print(currentFailureIdx, request.POST.get(f'{currentFailureIdx}_mano_de_obra'))
         currentFailure = Desperfecto(
             descripcion=request.POST['descripcion'][currentFailureIdx],
             mano_de_obra=request.POST.get(f'{currentFailureIdx}_mano_de_obra'),
@@ -77,8 +73,6 @@ def saveBudget(request):
         for currentReplacementIdFromPost in currentReplacementsFromPost:
             currentReplacement = Repuesto.objects.get(pk=currentReplacementIdFromPost)
             currentFailure.repuestos.add(currentReplacement)
-        print([77, currentVehicleObject])
         currentVehicleObject.desperfectos.add(currentFailure)
-    print(request.POST)
-    print("Well done!")
+    # print(request.POST)
     return HttpResponseRedirect(reverse('budget_app:index'))

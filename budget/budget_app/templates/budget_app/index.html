@@ -1,72 +1,89 @@
 {% load static %}
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1.0s">
 <link rel="stylesheet" href="{% static 'budget_app/style.css' %}">
-<div id="form_container">
-    <h1>Let's do it!</h1>
-    <form action="{% url 'budget_app:save_budget' %}"" method="post" id="vehicle_form">
-        {% csrf_token %}
-        <select name="vehicle_type" id="id_vehicle_type" required>
-            <option value="none">Select</option>
-            <option value="bike">Moto</option>
-            <option value="car">Automovil</option>
-        </select>
-        <fieldset id="generic_specifications">
-            {% for field in vehiculo.fields %}
-            <div class="field_container">
-                <label for="id_{{ field }}">{{ field.capitalize }}</label>
-                <input type="text" name="{{ field }}" id="id_{{ field }}">
-            </div>
-            {% endfor %}
-        </fieldset>
-        <fieldset id="car_specifications">
-            <div class="field_container">
-                <label for="car_types">Clase de automovil</label>
-                <select name="car_types" id="id_car_types">
-                    <option value="">Select</option>
-                    <option value="CM">Compacto</option>
-                    <option value="MV">Monovolumen</option>
-                    <option value="SD">Sedan</option>
-                    <option value="UT">Utilitario</option>
-                    <option value="LJ">Lujo</option>
-                </select>
-            </div>
-            <div class="field_container">
-                <label for="car_doors">Cantidad de puertas</label>
-                <select name="car_doors_number" id="id_car_doors">
-                    <option value="">Select</option>
-                    <option value="2">2</option>
-                    <option value="4">4</option>
-                </select>
-            </div>
-        </fieldset>
-        <fieldset id="bike_specifications">
-            <select name="engine_size" id="id_bike_engine_size">
-                <option value="">Select</option>
-                <option value="S">125 cc</option>
-                <option value="M">250 cc</option>
-                <option value="L">500 cc</option>
-            </select>
-        </fieldset>
-        <fieldset id="failure_fieldset">
-            <div id="main_failure_container" class="container"></div>
-            <div id="pusher_button">+</div>
-        </fieldset>
-        <input type="number" name="failure_counter" id="id_failure_counter">
-        <input type="submit" value="Continue" name="continue" id="submit_button">
-    </form>
-</div>
-<div id="enumerator">
-    <h3 id="vehicle_name">Presupuesto</h3>
-    <div id="failures"></div>
-    <span>Costo total estacionamiento:</span>
-    <span id="total_parking_cost"></span>
-    <span>Costo total mano de obra:</span>
-    <span id="total_working_cost"></span>
-    <span>Costo total repuestos:</span>
-    <span id="total_replacements_cost"></span>
-    <span>Presupuesto base:</span>
-    <span id="total_base"></span>
-    <span>Presupuesto final con ganacia taller:</span>
-    <span id="total"></span>
+<div id="main_container">
+    <div id="form_container">
+        <form action="{% url 'budget_app:save_budget' %}"" method="post" id="vehicle_form">
+            <h2>Formulario para presupuesto</h2>
+            {% csrf_token %}
+            <fieldset>
+                <h4>Especificaciones - Vehiculo</h4>
+                <div class="field_container">
+                    <label for="id_vehicle_type">Tipo de vehiculo</label>
+                    <select name="vehicle_type" id="id_vehicle_type" required>
+                        <option value="none">Select</option>
+                        <option value="bike">Moto</option>
+                        <option value="car">Automovil</option>
+                    </select>
+                </div>
+            </fieldset>
+            <fieldset id="generic_specifications">
+                {% for field in vehiculo.fields %}
+                <div class="field_container">
+                    <label for="id_{{ field }}">{{ field.capitalize }}</label>
+                    <input type="text" name="{{ field }}" id="id_{{ field }}">
+                </div>
+                {% endfor %}
+            </fieldset>
+            <fieldset id="car_specifications">
+                <h4>Especificaciones - Automovil</h4>
+                <div class="field_container">
+                    <label for="car_types">Clase de automovil</label>
+                    <select name="car_types" id="id_car_types">
+                        <option value="">Select</option>
+                        <option value="CM">Compacto</option>
+                        <option value="MV">Monovolumen</option>
+                        <option value="SD">Sedan</option>
+                        <option value="UT">Utilitario</option>
+                        <option value="LJ">Lujo</option>
+                    </select>
+                </div>
+                <div class="field_container">
+                    <label for="car_doors">Cantidad de puertas</label>
+                    <select name="car_doors_number" id="id_car_doors">
+                        <option value="">Select</option>
+                        <option value="2">2</option>
+                        <option value="4">4</option>
+                    </select>
+                </div>
+            </fieldset>
+            <fieldset id="bike_specifications">
+                <h4>Especificaciones - Moto</h4>
+                <div class="field_container">
+                    <label for="id_bike_engine_size">Cilindrada</label>
+                    <select name="engine_size" id="id_bike_engine_size">
+                        <option value="">Select</option>
+                        <option value="S">125 cc</option>
+                        <option value="M">250 cc</option>
+                        <option value="L">500 cc</option>
+                    </select>
+                </div>
+            </fieldset>
+            <fieldset id="failure_fieldset">
+                <div id="main_failure_container" class="container"></div>
+                <div id="pusher_button">+</div>
+            </fieldset>
+            <input type="number" name="failure_counter" id="id_failure_counter">
+            <input type="submit" value="Guardar datos" name="submit" id="submit_button">
+        </form>
+    </div>
+    <div id="enumerator">
+        <h3 id="enumerator-title">Enumerador</h3>
+        <div id="failures"></div>
+        <h4>Costos totales</h4>
+        <span>Costo total estacionamiento:</span>
+        <span id="total_parking_cost"></span>
+        <span>Costo total mano de obra:</span>
+        <span id="total_working_cost"></span>
+        <span>Costo total repuestos:</span>
+        <span id="total_replacements_cost"></span>
+        <span>Presupuesto base:</span>
+        <span id="total_base"></span>
+        <span>Presupuesto final con ganacia taller:</span>
+        <span id="total"></span>
+    </div>
 </div>
 <script>
     const replacement_objects_json = {{ repuesto.model_json | safe }};
