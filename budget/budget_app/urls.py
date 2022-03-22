@@ -3,5 +3,5 @@ from . import views
 
 app_name = 'budget_app'
 urlpatterns = [
-    path('', views.index, name='index'),
+    path('fields/', views.Fields.as_view()),
 ]
