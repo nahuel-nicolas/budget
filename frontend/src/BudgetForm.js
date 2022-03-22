@@ -1,20 +1,65 @@
 import React, { useState, useEffect } from 'react'
+import FailureContainer from './FailureContainer';
+
+function getModelDataStructure(modelFields, modelName) {
+    const currentModelDataStructure = {}
+    for (const currentFieldName of modelFields[modelName]) {
+        currentModelDataStructure[currentFieldName] = null
+    }
+    if (modelName == "desperfecto") {
+        currentModelDataStructure['repuestos'] = []
+    } else if (modelName == "vehiculo") {
+        currentModelDataStructure['tipo'] = null
+    }
+    return currentModelDataStructure
+}
+
+function getFormDataStructure(modelFields) {
+    const formData = {}
+    const specialModels = new Set(["repuesto", "desperfecto"])
+    for (const currentModelName in modelFields) {
+        if (specialModels.has(currentModelName)) {
+            continue
+        }
+        formData[currentModelName] = getModelDataStructure(
+            modelFields, currentModelName
+        )
+    }
+    formData['desperfectos'] = [getModelDataStructure(modelFields, 'desperfecto')]
+    console.log(formData)
+    return formData
+}
+
+async function fetch_and_set(url, setFunction) {
+    const response = await fetch(url);
+    const responseData = await response.json();
+    setFunction(responseData);
+}
+
+function addFailure(formData, setFormData, modelFields) {
+    formData.desperfectos.append(
+        getModelDataStructure(modelFields, 'desperfecto')
+    )
+    setFormData(formData)
+}
 
 const BudgetForm = () => {
-    async function fetch_and_set(url, setFunction) {
-        const response = await fetch(url);
-        const responseData = await response.json();
-        setFunction(responseData);
-    }
-    const [formData, setFormData] = useState(null);
+    const [modelFields, setModelFields] = useState(null);
     const [replacements, setReplacements] = useState(null);
+    const [formData, setFormData] = useState(null)
+
     useEffect(() => {
-        fetch_and_set('http://127.0.0.1:8000/fields/', setFormData);
+        fetch_and_set('http://127.0.0.1:8000/fields/', setModelFields);
         fetch_and_set('http://127.0.0.1:8000/repuesto/', setReplacements);
     }, []) 
+    useEffect(() => {
+        if (modelFields != null) {
+            setFormData(getFormDataStructure(modelFields))
+        }
+    }, [modelFields]) 
 
-    if (formData == null) {
-        return <p>Loading...</p>
+    if (modelFields == null || formData == null || replacements == null) {
+        return <h2>Loading...</h2>
     }
     return (
         <div className='budget_form'>
@@ -26,7 +71,7 @@ const BudgetForm = () => {
                 </select>
                 <fieldset id="generic_specifications">
                     {
-                        formData["vehiculo"].map((field, index) => {
+                        modelFields["vehiculo"].map((field, index) => {
                             return (
                                 <div className="field_container" key={index}>
                                     <label htmlFor={`id_${field}`}>{ field }</label>
@@ -71,7 +116,18 @@ const BudgetForm = () => {
                     </div>
                 </fieldset>
                 <fieldset id="failure_fieldset">
-                    <div id="main_failure_container" className="container"></div>
+                    <div id="main_failure_container" className="container" >
+                        {
+                            formData.desperfectos.map((desperfecto, index) => {
+                                return <FailureContainer 
+                                    key={index}
+                                    failure_idx={index}
+                                    modelFields={modelFields}
+                                    replacements={replacements}
+                                />
+                            })
+                        }
+                    </div>
                     <div id="pusher_button">+</div>
                 </fieldset>
                 <input type="submit" value="Guardar datos" name="submit" id="submit_button" />
