@@ -15,8 +15,16 @@ Including another URLconf
 """
 from django.contrib import admin
 from django.urls import path, include
+from rest_framework import routers
+from budget_app import views
+
+router = routers.DefaultRouter()
+router.register('automovil', views.AutomovilViewSet)
+router.register('moto', views.MotoViewSet)
+router.register('repuesto', views.RepuestoViewSet)
+router.register('desperfecto', views.DesperfectoViewSet)
 
 urlpatterns = [
-    path('', include('budget_app.urls')),
+    path('', include(router.urls)),
     path('admin/', admin.site.urls),
 ]
