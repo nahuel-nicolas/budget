@@ -1,23 +1,24 @@
-import logo from './logo.svg';
 import './App.css';
+import React, {useEffect, useState} from 'react';
 
 function App() {
+  let [fetchValues, setFetchValues] = useState(null);
+  useEffect(() => {
+    fetcher();
+  }, []) 
+
+  async function fetcher() {
+    console.log("effect")
+    let currentFetchValues = await fetch('http://127.0.0.1:8000/moto/');
+    console.log(currentFetchValues)
+    let currentFetchValuesData = await currentFetchValues.json();
+    setFetchValues(currentFetchValuesData);
+    console.log([fetchValues, currentFetchValuesData])
+  }
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      <p>Hi</p>
     </div>
   );
 }
