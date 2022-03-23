@@ -26,7 +26,6 @@ function getFormDataStructure(modelFields) {
         )
     }
     formData['desperfectos'] = [getModelDataStructure(modelFields, 'desperfecto')]
-    console.log(formData)
     return formData
 }
 
@@ -37,10 +36,12 @@ async function fetch_and_set(url, setFunction) {
 }
 
 function addFailure(formData, setFormData, modelFields) {
-    formData.desperfectos.append(
-        getModelDataStructure(modelFields, 'desperfecto')
-    )
-    setFormData(formData)
+    const newFailures = formData.desperfectos.slice();
+    newFailures.push(getModelDataStructure(modelFields, 'desperfecto'))
+    setFormData((prevFormData) => ({
+        ...prevFormData,
+        "desperfectos": newFailures
+    }))
 }
 
 const BudgetForm = () => {
@@ -57,6 +58,9 @@ const BudgetForm = () => {
             setFormData(getFormDataStructure(modelFields))
         }
     }, [modelFields]) 
+    useEffect(() => {
+        console.log(formData)
+    }, [formData]) 
 
     if (modelFields == null || formData == null || replacements == null) {
         return <h2>Loading...</h2>
@@ -64,7 +68,11 @@ const BudgetForm = () => {
     return (
         <div className='budget_form'>
             <form action="">
-                <select name="vehicle_type" id="id_vehicle_type" required>
+                <select 
+                    name="vehicle_type" 
+                    id="id_vehicle_type"
+                     
+                    required>
                     <option value="none">Select</option>
                     <option value="bike">Moto</option>
                     <option value="car">Automovil</option>
@@ -128,7 +136,12 @@ const BudgetForm = () => {
                             })
                         }
                     </div>
-                    <div id="pusher_button">+</div>
+                    <div 
+                        id="pusher_button" 
+                        onClick={() => addFailure(formData, setFormData, modelFields)} 
+                    >
+                        +
+                    </div>
                 </fieldset>
                 <input type="submit" value="Guardar datos" name="submit" id="submit_button" />
             </form>
