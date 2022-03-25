@@ -15,7 +15,7 @@ class Repuesto (models.Model):
 
     def __str__(self):
         importado = 'importado' if self.importado else 'nacional'
-        return f"{self.nombre} - Tamaño {self.size} - Origen {importado} "
+        return f"{self.nombre} - Tamaño {self.size} - Origen {importado}"
 
     def save(self, *args, **kwargs):
         if self.precio == 0:

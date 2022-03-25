@@ -10,7 +10,12 @@ from .serializers import AutomovilSerializer, MotoSerializer, RepuestoSerializer
 modelList = [Automovil, Moto, Desperfecto, Repuesto, Vehiculo]
 
 def getModelFields(model):
-    return [field.name for field in model._meta.fields]
+    fieldNames = []
+    for field in model._meta.fields:
+        if field.name != 'id':
+            fieldNames.append(field.name)
+    return fieldNames
+    # return [field.name for field in model._meta.fields]
 
 def getAllModelFields():
     allModelFields = {}
