@@ -10,7 +10,6 @@ const Vehicle = () => {
         const vehicle_id = params.vehicle_id
         const url = `http://127.0.0.1:8000/${vehicle_type}/${vehicle_id}/`
         utilities.fetch_and_set(url, [setVehicleData])
-        console.log(vehicleData)
     }, [])
     if (vehicleData == null) {
         return <h2>Loading...</h2>

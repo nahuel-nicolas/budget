@@ -38,7 +38,6 @@ const BudgetForm = () => {
                 setCarFieldsetDisabled, setFailureFieldsetDisabled, setSubmitButtonDisabled,
                 setReplacements, perpetualReplacements
             )
-            console.log(formData)
             if (formData.desperfectos) {
                 utilities.updateFailureCosts(
                     formData.desperfectos, setFailureCosts, replacements
