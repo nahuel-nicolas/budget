@@ -1,4 +1,4 @@
-function getModelDataStructure(modelFields, modelName) {
+export function getModelDataStructure(modelFields, modelName) {
     const currentModelDataStructure = {}
     for (const currentFieldName of modelFields[modelName]) {
         currentModelDataStructure[currentFieldName] = null
@@ -11,7 +11,7 @@ function getModelDataStructure(modelFields, modelName) {
     return currentModelDataStructure
 }
 
-function getFormDataStructure(modelFields) {
+export function getFormDataStructure(modelFields) {
     const formData = {}
     const specialModels = new Set(["repuesto", "desperfecto"])
     for (const currentModelName in modelFields) {
@@ -26,13 +26,15 @@ function getFormDataStructure(modelFields) {
     return formData
 }
 
-async function fetch_and_set(url, setFunction) {
+export async function fetch_and_set(url, setFunctionList) {
     const response = await fetch(url);
     const responseData = await response.json();
-    setFunction(responseData);
+    for (const setFunction of setFunctionList) {
+        setFunction(responseData);
+    }
 }
 
-function addFailure(formData, setFormData, modelFields) {
+export function addFailure(formData, setFormData, modelFields) {
     const newFailures = formData.desperfectos.slice();
     newFailures.push(getModelDataStructure(modelFields, 'desperfecto'))
     setFormData((prevFormData) => ({
@@ -41,7 +43,7 @@ function addFailure(formData, setFormData, modelFields) {
     }))
 }
 
-function isSomeFieldsetEmpty(modelName, fieldsetRequiredFields, nullValues, formData) {
+export function isSomeFieldsetEmpty(modelName, fieldsetRequiredFields, nullValues, formData) {
     for (const currentFieldName of fieldsetRequiredFields) {
         if (nullValues.has(formData[modelName][currentFieldName])) {
             return true
@@ -50,11 +52,11 @@ function isSomeFieldsetEmpty(modelName, fieldsetRequiredFields, nullValues, form
     return false
 }
 
-function isGenericFieldsetEmpty(genericRequiredFields, nullValues, formData) {
+export function isGenericFieldsetEmpty(genericRequiredFields, nullValues, formData) {
     return isSomeFieldsetEmpty("vehiculo", genericRequiredFields, nullValues, formData)
 }
 
-function isDesperfectoFieldsetEmpty(desperfectoRequiredFields, nullValues, formData) {
+export function isDesperfectoFieldsetEmpty(desperfectoRequiredFields, nullValues, formData) {
     for (const currentDesperfecto of formData.desperfectos) {
         for (const currentFieldName of desperfectoRequiredFields) {
             if (nullValues.has(currentDesperfecto[currentFieldName])) {
@@ -65,9 +67,46 @@ function isDesperfectoFieldsetEmpty(desperfectoRequiredFields, nullValues, formD
     return false
 }
 
-function updateFieldsetDisableStatus(
+function isReplacementMatch(replacement, neededImportedStatus, neededSize) {
+    return replacement.importado == neededImportedStatus && replacement.size == neededSize
+}
+
+function updateReplacements(perpetualReplacements, setReplacements, formData) {
+    let isVehicleImported = false;
+    let vehicleSize = "M";
+    switch (formData.vehiculo.tipo) {
+        case "car":
+            switch (formData.automovil.tipo) {
+                case "LJ":
+                    isVehicleImported = true
+                    break
+                case "MV":
+                    vehicleSize = "S"
+                    break
+                case  "CM":
+                    vehicleSize = "S"
+                    break
+                case "UT":
+                    vehicleSize = "L"
+                    break
+            }
+            break
+        case "bike":
+            vehicleSize = formData.moto.cilindrada
+    }
+    setReplacements(() => (
+        perpetualReplacements.filter(
+            (currentReplacement) => isReplacementMatch(
+                currentReplacement, isVehicleImported, vehicleSize
+            )
+        )
+    ))
+}
+
+export function updateFieldsetDisableStatus(
     modelFields, formData, setGenericFieldsetDisabled, setBikeFieldsetDisabled, 
-    setCarFieldsetDisabled, setFailureFieldsetDisabled, setSubmitButtonDisabled
+    setCarFieldsetDisabled, setFailureFieldsetDisabled, setSubmitButtonDisabled,
+    setReplacements, perpetualReplacements
 ) {
     const genericRequiredFields = modelFields.vehiculo
     const nullValues = new Set([null, "none", "", " "])
@@ -85,11 +124,6 @@ function updateFieldsetDisableStatus(
         ) || isSomeFieldsetEmpty(
             "moto", ["cilindrada"], nullValues, formData
         )
-        if (!(shallDisableFailureFieldset)) {
-            shallDisableSubmitButton = isDesperfectoFieldsetEmpty(
-                modelFields.desperfecto, nullValues, formData
-            )
-        }
     } else if (formData.vehiculo.tipo == "car") {
         shallDisableGenericFieldset = false
         shallDisableBikeFieldset = true
@@ -99,11 +133,12 @@ function updateFieldsetDisableStatus(
         ) || isSomeFieldsetEmpty(
             "automovil", ["cantidad_puertas", "tipo"], nullValues, formData
         )
-        if (!(shallDisableFailureFieldset)) {
-            shallDisableSubmitButton = isDesperfectoFieldsetEmpty(
-                modelFields.desperfecto, nullValues, formData
-            )
-        }
+    }
+    if (!(shallDisableFailureFieldset)) {
+        updateReplacements(perpetualReplacements, setReplacements, formData)
+        shallDisableSubmitButton = isDesperfectoFieldsetEmpty(
+            modelFields.desperfecto, nullValues, formData
+        )
     }
     setGenericFieldsetDisabled(shallDisableGenericFieldset)
     setBikeFieldsetDisabled(shallDisableBikeFieldset)
@@ -112,7 +147,7 @@ function updateFieldsetDisableStatus(
     setSubmitButtonDisabled(shallDisableSubmitButton)
 }
 
-function getReplacementsCost(selectedReplacements, replacements) {
+export function getReplacementsCost(selectedReplacements, replacements) {
     let replacementsCost = 0
     for (const currentSelectedReplacementUrl of selectedReplacements) {
         for (const currentReplacement of replacements) {
@@ -124,7 +159,7 @@ function getReplacementsCost(selectedReplacements, replacements) {
     return replacementsCost
 }
 
-function updateFailureCosts(failures, setFailureCosts, replacements) {
+export function updateFailureCosts(failures, setFailureCosts, replacements) {
     let totalReplacementsCost = 0
     let totalWorkingCost = 0
     let totalParkingCost = 0
@@ -141,11 +176,39 @@ function updateFailureCosts(failures, setFailureCosts, replacements) {
     }))
 }
 
-function getTotalCost(failureCosts) {
+export function getTotalCost(failureCosts) {
     return failureCosts.working + failureCosts.parking + failureCosts.replacements
 }
 
-async function makePostRequest(url, data) {
+// const response = await fetch(
+//     'http://127.0.0.1:8000/desperfecto/', 
+//     {
+//         method: "POST",
+//         headers: {
+//         'Accept': 'application/json, text/plain, */*',
+//         'Content-Type': 'application/json'
+//         },
+//         body: JSON.stringify({
+//         "descripcion": "hey",
+//         "mano_de_obra": 4,
+//         "tiempo_dias": 5,
+//         "repuestos": ["http://127.0.0.1:8000/repuesto/7/"]
+//         })
+//     }
+// )
+// const responseData = await response.json();
+
+// console.log(responseData) = {
+//     cilindrada: "S"
+//     desperfectos: ['http://127.0.0.1:8000/desperfecto/18/']
+//     marca: "Yamaha"
+//     modelo: "X32"
+//     patente: "ASD783"
+//     url: "http://127.0.0.1:8000/moto/8/"
+// }
+
+
+export async function makePostRequest(url, data) {
   const response = await fetch(
     url, 
     {
@@ -161,7 +224,8 @@ async function makePostRequest(url, data) {
   return responseData
 }
 
-async function submitButtonHandler(formData) {
+export async function submitButtonHandler(formData, setBoxDisplay, navigate) {
+    setBoxDisplay(true)
     const currentFailuresUrls = []
     for (const currentFailure of formData.desperfectos) {
         const failureResponse = await makePostRequest(
@@ -190,5 +254,9 @@ async function submitButtonHandler(formData) {
             'http://127.0.0.1:8000/moto/', vehicleData
         )
     }
+    vehicleResponse = vehicleResponse.url.split("/")
+    const vehicle_id = vehicleResponse[vehicleResponse.length - 2]
     debugger;
+    navigate(`vehicle/${formData.vehiculo.tipo}/${vehicle_id}`)
+    // window.location.reload(true);
 }

@@ -1,5 +1,4 @@
-import './App.css';
-import React, {useEffect, useState} from 'react';
+import React from 'react';
 import {
   BrowserRouter as Router,
   Switch,
@@ -8,34 +7,29 @@ import {
   Link
 } from "react-router-dom";
 import BudgetForm from './BudgetForm';
-
-// async function fetcher() {
-//   const response = await fetch(
-//     'http://127.0.0.1:8000/desperfecto/', 
-//     {
-//       method: "POST",
-//       headers: {
-//         'Accept': 'application/json, text/plain, */*',
-//         'Content-Type': 'application/json'
-//       },
-//       body: JSON.stringify({
-//         "descripcion": "hey",
-//         "mano_de_obra": 4,
-//         "tiempo_dias": 5,
-//         "repuestos": ["http://127.0.0.1:8000/repuesto/7/"]
-//       })
-//     }
-//   )
-//   const responseData = await response.json();
-//   debugger;
-// }
+import SuccesPage from './SuccesPage';
+import Vehicle from './Vehicle';
 
 function App() {
   return (
     <Router>
       <div className="App">
         <Routes>
-          <Route path="/" exact element={<BudgetForm />} />
+          <Route path="/" element={<BudgetForm />} />
+          <Route path="vehicle">
+            <Route path=":vehicle_type">
+              <Route path=":vehicle_id" element={<Vehicle />} />
+            </Route>
+          </Route>
+          <Route
+            path="*"
+            element={
+              <main>
+                <h2>Error 404</h2>
+                <p>There's nothing here!</p>
+              </main>
+            }
+          />
         </Routes>
       </div>
     </Router>
