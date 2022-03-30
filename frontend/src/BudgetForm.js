@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react'
 import FailureContainer from './FailureContainer'
-import Box from './Box'
+import Box from './Box/Box'
 import * as utilities from './utilities'
 import { useNavigate } from "react-router-dom";
 

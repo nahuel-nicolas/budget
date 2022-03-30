@@ -21,12 +21,12 @@ from budget_app import views
 router = routers.DefaultRouter()
 router.register('automovil', views.AutomovilViewSet)
 router.register('moto', views.MotoViewSet)
-# router.register('motofields', views.MotoFields, 'motofields')
 router.register('repuesto', views.RepuestoViewSet)
 router.register('desperfecto', views.DesperfectoViewSet)
 
 urlpatterns = [
     path('', include(router.urls)),
     path('', include('budget_app.urls')),
+    path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     path('admin/', admin.site.urls),
 ]

@@ -1,5 +1,3 @@
-from multiprocessing import context
-from django.shortcuts import render
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .models import Automovil, Moto, Desperfecto, Repuesto, Vehiculo
@@ -31,15 +29,19 @@ class Fields(APIView):
 class AutomovilViewSet(viewsets.ModelViewSet):
     queryset = Automovil.objects.all()
     serializer_class = AutomovilSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
 class MotoViewSet(viewsets.ModelViewSet):
     queryset = Moto.objects.all()
     serializer_class = MotoSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
 class RepuestoViewSet(viewsets.ModelViewSet):
     queryset = Repuesto.objects.all()
     serializer_class = RepuestoSerializer
+    permission_classes = [permissions.IsAuthenticated]
 
 class DesperfectoViewSet(viewsets.ModelViewSet):
     queryset = Desperfecto.objects.all()
     serializer_class = DesperfectoSerializer
+    permission_classes = [permissions.IsAuthenticated]
