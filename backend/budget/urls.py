@@ -27,6 +27,7 @@ router.register('desperfecto', views.DesperfectoViewSet)
 urlpatterns = [
     path('', include(router.urls)),
     path('', include('budget_app.urls')),
+    path('authentication/', include('authentication.urls')),
     path('api-auth/', include('rest_framework.urls', namespace='rest_framework')),
     path('admin/', admin.site.urls),
 ]

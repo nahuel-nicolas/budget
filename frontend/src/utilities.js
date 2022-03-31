@@ -26,8 +26,14 @@ export function getFormDataStructure(modelFields) {
     return formData
 }
 
-export async function fetch_and_set(url, setFunctionList) {
-    const response = await fetch(url);
+export async function fetch_and_set(url, setFunctionList, authTokens) {
+    const response = await fetch(url, {
+        method:'GET',
+        headers:{
+            'Content-Type':'application/json',
+            'Authorization':'Bearer ' + String(authTokens.access)
+        }
+    })
     const responseData = await response.json();
     for (const setFunction of setFunctionList) {
         setFunction(responseData);
@@ -208,14 +214,15 @@ export function getTotalCost(failureCosts) {
 // }
 
 
-export async function makePostRequest(url, data) {
+export async function makePostRequest(url, data, authTokens) {
   const response = await fetch(
     url, 
     {
       method: "POST",
       headers: {
         'Accept': 'application/json, text/plain, */*',
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Authorization':'Bearer ' + String(authTokens.access)
       },
       body: JSON.stringify(data)
     }
@@ -224,12 +231,12 @@ export async function makePostRequest(url, data) {
   return responseData
 }
 
-export async function submitButtonHandler(formData, setBoxDisplay, navigate) {
+export async function submitButtonHandler(formData, setBoxDisplay, navigate, authTokens) {
     setBoxDisplay(true)
     const currentFailuresUrls = []
     for (const currentFailure of formData.desperfectos) {
         const failureResponse = await makePostRequest(
-            'http://127.0.0.1:8000/desperfecto/', currentFailure
+            'http://127.0.0.1:8000/desperfecto/', currentFailure, authTokens
         )
         currentFailuresUrls.push(failureResponse.url)
     }
@@ -245,13 +252,13 @@ export async function submitButtonHandler(formData, setBoxDisplay, navigate) {
         vehicleData["cantidad_puertas"] = formData.automovil.cantidad_puertas
         vehicleData["desperfectos"] = currentFailuresUrls
         vehicleResponse = await makePostRequest(
-            'http://127.0.0.1:8000/automovil/', vehicleData
+            'http://127.0.0.1:8000/automovil/', vehicleData, authTokens
         )
     } else if (formData.vehiculo.tipo == "bike") {
         vehicleData["cilindrada"] = formData.moto.cilindrada
         vehicleData["desperfectos"] = currentFailuresUrls
         vehicleResponse = await makePostRequest(
-            'http://127.0.0.1:8000/moto/', vehicleData
+            'http://127.0.0.1:8000/moto/', vehicleData, authTokens
         )
     }
     vehicleResponse = vehicleResponse.url.split("/")

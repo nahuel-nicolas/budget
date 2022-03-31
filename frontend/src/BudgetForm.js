@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useContext } from 'react'
 import FailureContainer from './FailureContainer'
 import Box from './Box/Box'
 import * as utilities from './utilities'
 import { useNavigate } from "react-router-dom";
+import AuthContext from "./Authentication/AuthContext"
+
 
 const BudgetForm = () => {
+    const { authTokens } = useContext(AuthContext)
     const [modelFields, setModelFields] = useState(null);
     const [perpetualReplacements, setPerpetualReplacements] = useState(null)
     const [replacements, setReplacements] = useState(null);
@@ -21,9 +24,12 @@ const BudgetForm = () => {
     const navigate = useNavigate()
 
     useEffect(() => {
-        utilities.fetch_and_set('http://127.0.0.1:8000/fields/', [setModelFields])
         utilities.fetch_and_set(
-            'http://127.0.0.1:8000/repuesto/', [setReplacements, setPerpetualReplacements]
+            'http://127.0.0.1:8000/fields/', [setModelFields], authTokens
+        )
+        utilities.fetch_and_set(
+            'http://127.0.0.1:8000/repuesto/', 
+            [setReplacements, setPerpetualReplacements], authTokens
         )
     }, [])
     useEffect(() => {
@@ -191,7 +197,11 @@ const BudgetForm = () => {
                     </button>
                 </fieldset>
                 <input 
-                    onClick={() => utilities.submitButtonHandler(formData, setBoxDisplay, navigate)}
+                    onClick={
+                        () => utilities.submitButtonHandler(
+                            formData, setBoxDisplay, navigate, authTokens
+                        )
+                    }
                     type="submit" 
                     value="Guardar datos" 
                     name="submit" 
