@@ -1,6 +1,4 @@
 *.pyc
-*/*/*/*/migrations/000*
-# !migrations/__init__.py
 __pycache__/
 venv/
 *.sqlite3
